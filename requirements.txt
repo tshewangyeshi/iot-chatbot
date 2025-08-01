@@ -146,7 +146,7 @@ marshmallow==3.26.1
 matplotlib==3.10.0
 matplotlib-inline==0.1.6
 mdurl==0.1.2
-mediapipe==0.10.21
+
 mistune==3.0.2
 ml_dtypes==0.5.3
 more-itertools==10.1.0
