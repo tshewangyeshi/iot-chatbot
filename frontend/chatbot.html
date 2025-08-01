@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GAO Tek AI Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    #chatbox {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #messages {
+      max-height: 500px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding-right: 10px;
+    }
+
+    .message {
+      margin-bottom: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      line-height: 1.6;
+    }
+
+    .user {
+      background-color: #e0f2ff;
+      text-align: right;
+      color: #0077cc;
+    }
+
+    .bot {
+      background-color: #f1f1f1;
+      text-align: left;
+      color: #333;
+    }
+
+    #form {
+      display: flex;
+      gap: 10px;
+    }
+
+    #query {
+      flex: 1;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;;
+      min-height: 48px;
+      line-height: 1.4;
+      resize: none;
+  overflow-y: auto;
+  max-height: 160px;
+    }
+
+    button {
+      background-color: #0077cc;
+      color: #fff;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .typing-indicator {
+      font-style: italic;
+      color: #888;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="chatbox">
+    <div id="messages"></div>
+    <div id="typing" class="typing-indicator" style="display: none;">GAO Bot is typing...</div>
+    <form id="form">
+      <textarea id="query" rows="1" placeholder="Ask me anything..." required></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const input = document.getElementById('query');
+    const messages = document.getElementById('messages');
+    const typing = document.getElementById('typing');
+
+    input.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault(); // Prevent newline
+    form.dispatchEvent(new Event('submit')); // Manually trigger submit
+  }
+});
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const question = input.value.trim();
+      if (!question) return;
+
+      appendMessage("You", question, "user");
+      input.value = '';
+      typing.style.display = 'block';
+
+      try {
+        const response = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: question })
+        });
+
+        const data = await response.json();
+        const formattedAnswer = data.answer
+          .replace(/\n/g, '<br>')
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/### (.+)/g, '<h3>$1</h3>')
+          .replace(/\* (.+)/g, '<li>$1</li>');
+
+        appendHTMLMessage("GAO Bot", formattedAnswer, "bot");
+      } catch (err) {
+        appendMessage("GAO Bot", "⚠️ Sorry, something went wrong.", "bot");
+      } finally {
+        typing.style.display = 'none';
+      }
+    });
+
+    function appendMessage(sender, text, cls) {
+      const msg = document.createElement('div');
+      msg.className = `message ${cls}`;
+      msg.textContent = `${sender}: ${text}`;
+      messages.appendChild(msg);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function appendHTMLMessage(sender, html, cls) {
+      const msg = document.createElement('div');
+      msg.className = `message ${cls}`;
+      msg.innerHTML = `<strong>${sender}:</strong><br>${html}`;
+      messages.appendChild(msg);
+      messages.scrollTop = messages.scrollHeight;
+    }
+  </script>
+</body>
+</html>
